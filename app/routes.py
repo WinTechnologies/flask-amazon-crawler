@@ -8,11 +8,9 @@ from sqlalchemy import desc
 
 from app import db
 from app.models.asin import Asin
+from datatables import ColumnDT, DataTables
 from app.tasks.asin_task import save_data
 from app.forms.search import SearchForm
-
-from datatables import ColumnDT, DataTables
-
 
 host_url = 'http://127.0.0.1:5000'
 bp = Blueprint("all", __name__)
