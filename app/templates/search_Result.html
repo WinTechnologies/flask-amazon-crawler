@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h2>Search Result:</h2>
+    </div>
+    <div class="col-md-2">
+        <a href='/download/{{query}}' class="btn btn-primary">Download</a>
+    </div>
+
+    <div class="col-md-2">
+        <a href="javascript:javascript:history.go(-1)" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <th>No</th>
+        <th>Site Url</th>
+        <th>Asin</th>
+        <th>Review Rating</th>
+        <th>Quantity for Reviews</th>
+        <th>Monetary Unit</th>
+        <th>Selling price</th>
+        <th>Link</th>
+        <th>Created At</th>
+    </thead>
+    <tbody>
+        {% for row in result %}
+            <tr>
+                <td> {{ loop.index }} </td>
+                <td>{{ row.site_url }}</td>
+                <td>{{ row.asin }}</td>
+                <td>{{ row.review_rating }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.unit }}</td>
+                <td>{{ row.sell_price }}</td>
+                <td>{{ row.link }}</td>
+                <td>{{ row.created_at}}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

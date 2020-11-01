@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block extra_stylesheets %}
+  <link href="https://cdn.datatables.net/1.10.10/css/jquery.dataTables.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<br />
+<h1>Automated Asin Crawler based on Flask + Celery + MySQL</h1>
+<hr />
+<form action = "{{host_url}}/uploader" method = "POST"
+    enctype = "multipart/form-data">
+    <div class="row">
+        <div class="col-md-4">Input File:</div>
+        <div class="col-md-4">
+            <input type = "file" name = "input" />
+        </div>
+        <div class="col-md-3">
+            <input type = "submit" value="Upload" class="btn btn-primary"/>
+        </div>
+    </div>
+</form>
+<hr />
+<h2>Search Crawler Result</h2>
+
+<table id="asin_list" class="display" cellspacing="0" width="100%">
+    <thead>
+        <th>No</th>
+        <th>Site Url</th>
+        <th>Asin</th>
+        <th>Review Rating</th>
+        <th>Quantity for Reviews</th>
+        <th>Monetary Unit</th>
+        <th>Selling price</th>
+        <th>Link</th>
+        <th>Created At</th>
+        <th>Status</th>
+        <th>Description</th>
+    </thead>
+  <tbody></tbody>
+</table>
+{% endblock %}
+
+{% block extra_javascripts %}
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+        $('#asin_list').dataTable( {
+            "processing": true,
+            "serverSide": true,
+            "ajax": "get_data",
+        });
+    } );
+</script>
+{% endblock %}
