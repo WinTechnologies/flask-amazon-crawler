@@ -29,9 +29,10 @@ def uploader():
     if not os.path.isdir(target):
         os.mkdir(target)
 
-    if request.method == 'POST' and request.files['input']:
-        f=request.files['input']
-        file_name = f.filename
+    file = request.files['input']
+    file.seek(0, os.SEEK_END)
+    if request.method == 'POST' and file.tell() > 0:
+        file_name = file.filename
         destination = os.path.join(target, file_name)
         f.save(destination)
 
@@ -46,7 +47,8 @@ def uploader():
 
         return str(count) + ' crawlers are running in background, you can check them to refresh the page.' + ' <a href="/">back</a>'
     else:
-        redirect('/')
+        return redirect('/')
+
 
 @bp.route('/search', methods=['POST'])
 def search():
