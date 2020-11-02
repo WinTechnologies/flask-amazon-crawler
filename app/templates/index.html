@@ -21,34 +21,107 @@
     </div>
 </form>
 <hr />
-<h2>Search Crawler Result</h2>
-
-<table id="asin_list" class="display" cellspacing="0" width="100%">
-    <thead>
-        <th>No</th>
-        <th>Site Url</th>
-        <th>Asin</th>
-        <th>Review Rating</th>
-        <th>Quantity for Reviews</th>
-        <th>Monetary Unit</th>
-        <th>Selling price</th>
-        <th>Link</th>
-        <th>Created At</th>
-        <th>Status</th>
-        <th>Description</th>
-    </thead>
-  <tbody></tbody>
-</table>
+{% if count > 0 %}
+    <div class="alert alert-success" role="alert">
+        {{count}} Crawlers are running in background, Refresh to confirm after a while.
+    </div>
+{% endif %}
+<div class="row">
+    <div class="col-md-6">
+        <h2>Search Crawler Result</h2>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-md-2">
+        <a href='/' class="btn btn-primary">Refresh</a>
+    </div>
+    <div class="col-md-1">
+        From:
+    </div>
+    <div class="col-md-2">
+        <input class="datepicker_from" data-date-format="mm/dd/yyyy">
+    </div>
+    <div class="col-md-1">
+        To:
+    </div>
+    <div class="col-md-2">
+        <input class="datepicker_to" data-date-format="mm/dd/yyyy">
+    </div>
+    <div class="col-md-1">
+        <button id='excel' class="btn btn-primary">Download</button>
+    </div>
+</div>
+<hr />
+<div class="row" >
+    <div class="col-md-12">
+        <table id="asin_list" class="display" cellspacing="0" width="100%">
+            <thead>
+                <th>No</th>
+                <th>Site Url</th>
+                <th>Asin</th>
+                <th>Review Rating</th>
+                <th>Quantity for Reviews</th>
+                <th>Monetary Unit</th>
+                <th>Selling price</th>
+                <th>Link</th>
+                <th>Created At</th>
+                <th>Status</th>
+                <th>Description</th>
+            </thead>
+          <tbody></tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_javascripts %}
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function() {
-        $('#asin_list').dataTable( {
+        var currentDate = new Date();
+        $('.datepicker_from').datepicker({
+            format: 'yyyy-mm-dd',
+            startDate: '-3d'
+        });
+
+        $('.datepicker_to').datepicker({
+            format: 'yyyy-mm-dd',
+            startDate: '-3d'
+        });
+
+        $(".datepicker_from").datepicker("setDate",currentDate);
+        $(".datepicker_to").datepicker("setDate",currentDate);
+
+        var asin_list = $('#asin_list').DataTable( {
             "processing": true,
             "serverSide": true,
             "ajax": "get_data",
         });
+
+        $("#excel").click( function() {
+            let from_date = $('.datepicker_from').val();
+            let from_to = $('.datepicker_to').val();
+
+            if( from_date == "" || from_to == "") {
+                alert('Please select the date.');
+                return;
+            }
+
+            var from = new Date(from_date);
+            var to = new Date(from_to);
+
+            if( from > to ) {
+                alert('The from date should be earlier than to date.')
+                return;
+            }
+            window.open( '{{host_url}}' + '/excel/' + from_date + '/' + from_to, "_blank")
+
+            return false;
+        });
+
+        setInterval(function () {
+            asin_list.ajax.reload();
+        }, 10 * 1000);
     } );
 </script>
 {% endblock %}
