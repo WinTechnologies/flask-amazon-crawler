@@ -8,7 +8,7 @@
 <br />
 <h1>Automated Asin Crawler based on Flask + Celery + MySQL</h1>
 <hr />
-<form action = "{{host_url}}/uploader" method = "POST"
+<form action = "{{ url_for('all.uploader') }}" method = "POST"
     enctype = "multipart/form-data">
     <div class="row">
         <div class="col-md-4">Input File:</div>
@@ -100,27 +100,28 @@
 
         $("#excel").click( function() {
             let from_date = $('.datepicker_from').val();
-            let from_to = $('.datepicker_to').val();
+            let to_date = $('.datepicker_to').val();
 
-            if( from_date == "" || from_to == "") {
+            if( from_date == "" || to_date == "") {
                 alert('Please select the date.');
                 return;
             }
 
             var from = new Date(from_date);
-            var to = new Date(from_to);
+            var to = new Date(to_date);
 
             if( from > to ) {
                 alert('The from date should be earlier than to date.')
                 return;
             }
-            window.open( '{{host_url}}' + '/excel/' + from_date + '/' + from_to, "_blank")
+
+            window.open( "/to_excel/" + from_date + "/" + to_date, "_blank")
 
             return false;
         });
 
         setInterval(function () {
-            asin_list.ajax.reload();
+            asin_list.draw(false);
         }, 10 * 1000);
     } );
 </script>
