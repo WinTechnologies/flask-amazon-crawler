@@ -140,9 +140,8 @@
             asin_list.draw(false);
 
             if(parseInt(percent) == 100) {
-                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
                 clearInterval(updateProgress);
-                $("#upload").prop('disabled', false);
+                $(".btn").prop('disabled', false);
             }
         };
 
@@ -164,7 +163,7 @@
             }
 
             form_data.append('input',  file);
-            $(this).prop('disabled', true);
+            $('.btn').prop('disabled', true);
             $.ajax({
                 type: 'POST',
                 url:  '/uploader',
