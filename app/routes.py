@@ -89,10 +89,10 @@ def to_excel(from_date, to_date):
         Asin.created_at < to_date)
     results = query.all()
 
-    df = pd.DataFrame(columns=['Amazon Site','ASIN','Review Rating','Quantity of Reviews','Monteray Unit','Selling Price','Link'])
+    df = pd.DataFrame(columns=['Amazon Site','ASIN','Review Rating','Quantity of Reviews','Monteray Unit','Selling Price','Link', 'Created At'])
     filename = "/autos.xlsx"
     for row in results:
-        df = df.append({'Amazon Site': row.site_url, 'ASIN': row.asin, 'Review Rating': row.review_rating,'Monteray Unit': row.unit,'Selling Price':row.sell_price,'Link': row.link,'Quantity of Reviews':str(row.quantity)},ignore_index=True)
+        df = df.append({'Amazon Site': row.site_url, 'ASIN': row.asin, 'Review Rating': row.review_rating,'Monteray Unit': row.unit,'Selling Price':row.sell_price,'Link': row.link,'Quantity of Reviews':str(row.quantity), 'Created At': row.created_at},ignore_index=True)
 
     df.to_excel(filename,encoding='utf-8-sig',index=False)
 
