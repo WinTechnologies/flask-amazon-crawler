@@ -28,11 +28,8 @@
 <div class="row">
     <div class="col-md-2">Progress:</div>
     <div class="col-md-9">
-        <div class="progress">
-
-        </div>
+        <div class="progress"></div>
     </div>
-    <div class="col-md-1">100%</div>
 </div>
 <hr />
 <div class="row">
@@ -128,23 +125,32 @@
 
             return false;
         });
-
-        var progress = function(expected_count) {
+        let percent = 0;
+        let updateProgress;
+        var progress = function(expected_count, crawler_count) {
             let current_length = asin_list['context'][0]['_iRecordsTotal'];
-            let percent = ((current_length / expected_count) * 100).toFixed(2);
-
+            percent = (100 - ((expected_count - current_length) / crawler_count * 100)).toFixed(2);
+            console.log('current_length: ' + current_length);
+            console.log('expected count: ' + expected_count);
+            console.log('crawler count: ' + crawler_count);
             console.log('percent:' + percent + '%');
 
             var html="<div class='progress-bar progress-bar-striped active' role='progressbar'  aria-valuemin='0' aria-valuemax='100' style='width:"+percent+"%'>" + percent + "%</div>";
             $(".progress").html(html);
             asin_list.draw(false);
 
-            if(percent == 100) {
-                clearInterval(progress);
+            if(parseInt(percent) == 100) {
+                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+                clearInterval(updateProgress);
+                $("#upload").prop('disabled', false);
             }
         };
 
         $("#upload").click(function() {
+            var percent = 0;
+            var html="<div class='progress-bar progress-bar-striped active' role='progressbar'  aria-valuemin='0' aria-valuemax='100' style='width:"+percent+"%'>" + percent + "%</div>";
+            percent = 0;
+            $(".progress").html(html);
             var form_data = new FormData();
             var file = $('input[type=file]')[0].files[0];
 
@@ -158,7 +164,7 @@
             }
 
             form_data.append('input',  file);
-
+            $(this).prop('disabled', true);
             $.ajax({
                 type: 'POST',
                 url:  '/uploader',
@@ -167,6 +173,7 @@
                 cache: false,
                 processData: false,
                 success: function(data) {
+
                     console.log(data.status);
                     if(data.status == 'success') {
                         $("#message").addClass('alert-success');
@@ -178,7 +185,7 @@
                     $("#message").removeClass('invisible');
                     $("#message").html(data.message);
 
-                    setInterval(progress, 10 * 1000, data.expected_count);
+                    updateProgress = setInterval(progress, 10 * 1000, data.expected_count, data.count);
                 },
             });
         });
