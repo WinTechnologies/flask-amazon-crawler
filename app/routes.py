@@ -3,7 +3,7 @@ import requests
 import re
 import sys
 
-from flask import Flask, render_template, request, Blueprint, jsonify, redirect, send_file
+from flask import Flask, render_template, request, Blueprint, jsonify, redirect, send_file, session
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 
@@ -20,35 +20,55 @@ app_root = os.path.dirname(os.path.abspath(__file__))
 @bp.route("/")
 def index():
     search_form = SearchForm()
-    return render_template('index.html', form=search_form, count=-1)
+    return render_template('index.html', form=search_form)
 
 @bp.route('/uploader', methods=['GET', 'POST'])
 def uploader():
-    search_form = SearchForm()
     target = os.path.join(app_root, 'uploads')
     if not os.path.isdir(target):
         os.mkdir(target)
 
-    file = request.files['input']
-    file.seek(0, os.SEEK_END)
-    if request.method == 'POST' and file.tell() > 0:
-        file_name = file.filename
+    f = request.files.get('input')
+    file_name = f.filename
+
+    # current - count
+    current_count = db.session.query(Asin).count()
+
+    if request.method == 'POST' and file_name != '':
         destination = os.path.join(target, file_name)
         f.save(destination)
 
         with open(destination, 'r') as file:
             lines = file.readlines()
-        count = 0
 
+        crawler_count = 0
         for line in lines:
             cc=line.split()
             save_data.delay(cc[0], cc[1])
-            count += 1
 
-        return str(count) + ' crawlers are running in background, you can check them to refresh the page.' + ' <a href="/">back</a>'
+            crawler_count = crawler_count + 1
+
+        result = {
+            'count': crawler_count,
+            'status': 'success',
+            'message': '<b>' + str(crawler_count) + '</b> crawlers are running in background, you can check them to refresh the page.',
+            'expected_count': current_count + crawler_count
+        }
     else:
-        return redirect('/')
+        result = {
+            'count': 0,
+            'status': 'error',
+            'message': 'It seems like the file format has not matched to the standard input.',
+            'expected_count': current_count
+        }
 
+    return result
+
+@bp.route('/progress/<int:count>')
+def progress(count):
+    search_form = SearchForm()
+    current_count = db.session.query(Asin).count()
+    return render_template('index.html', form=search_form, current_count=current_count)
 
 @bp.route('/search', methods=['POST'])
 def search():
