@@ -102,6 +102,20 @@
             "processing": true,
             "serverSide": true,
             "ajax": "/get_data",
+            "order": [[ 0, "desc" ]],
+
+            "columnDefs": [
+                {
+                    "render": function ( data, type, row ) {
+                        //var date = moment.utc().format('YYYY-MM-DD HH:mm:ss');
+                        //var localTime  = moment.utc(data).toDate();
+                        localTime = moment(data).format('YYYY-MM-DD HH:mm:ss');
+
+                        return data;
+                    },
+                    "targets": 8
+                }
+            ]
         });
 
         $("#excel").click( function() {

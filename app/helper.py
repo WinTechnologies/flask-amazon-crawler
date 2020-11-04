@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 import requests
+import datetime
 from werkzeug.exceptions import HTTPException
 
 def crawler_result(site_url, asin):
@@ -122,8 +123,10 @@ def crawler_result(site_url, asin):
             except IndexError:
                 price='N/A'
                 memontary_unit='N/A'
-        res = {
-            'status': 'success',
+
+        if review == 'N/A' and memontary_unit == 'N/A' and quantr == 'N/A' and price == 'N/A':
+            res = {
+            'status': 'error',
             'site_url': site_url,
             'asin': asin,
             'review': review,
@@ -131,8 +134,20 @@ def crawler_result(site_url, asin):
             'quantity': quantr,
             'price': price,
             'link': url,
-            'description': ''
+            'description': 'The cralwer has not gotten the correct data.'
         }
+        else:
+            res = {
+                'status': 'success',
+                'site_url': site_url,
+                'asin': asin,
+                'review': review,
+                'unit': memontary_unit,
+                'quantity': quantr,
+                'price': price,
+                'link': url,
+                'description': ''
+            }
     else:
         res = {
             'status':  str(req.status_code) + ' Error code',
@@ -157,3 +172,6 @@ def to_dict(row):
     for key in keys:
         rtn_dict[key] = getattr(row, key)
     return rtn_dict
+
+def dt_to_str(date, fma='%Y-%m-%d'):
+    return datetime.strftime(fma)

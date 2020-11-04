@@ -2,9 +2,10 @@ import os
 import requests
 import re
 import sys
-
+import datetime
+from querystring_parser import parser
 from flask import Flask, render_template, request, Blueprint, jsonify, redirect, send_file, session
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -100,6 +101,7 @@ def to_excel(from_date, to_date):
 
 @bp.route('/get_data')
 def get_data():
+    from app.helper import dt_to_str
     columns = [
         ColumnDT(Asin.id),
         ColumnDT(Asin.site_url),
@@ -114,7 +116,48 @@ def get_data():
         ColumnDT(Asin.description)
     ]
 
-    query = db.session.query().select_from(Asin).order_by(desc(Asin.id))
+    args = parser.parse(request.query_string)
+
+    order = args['order']
+    order_index = order[0]['column']
+    dir_asc = order[0]['dir']
+
+    if order_index == 1:
+        order = Asin.site_url
+    elif order_index == 2:
+        order = Asin.asin
+    elif order_index == 3:
+        order = Asin.review_rating
+    elif order_index == 4:
+        order = Asin.quantity
+    elif order_index == 5:
+        order = Asin.sell_price
+    elif order_index == 6:
+        order = Asin.link
+    elif order_index == 7:
+        order = Asin.link
+    elif order_index == 8:
+        order = Asin.created_at
+    elif order_index == 9:
+        order = Asin.status
+    elif order_index == 10:
+        order = Asin.description
+    else:
+        order = Asin.id
+
+    if dir_asc == 'desc':
+        order_by = desc(order)
+    else:
+        order_by = asc(order)
+
+    search_value = args['search']['value']
+
+    if search_value != '':
+        query = db.session.query().select_from(Asin)
+    else:
+        query = db.session.query().select_from(Asin).filter( Asin.site_url.like('%'+search_value + '%') | Asin.asin.like('%' + search_value + '%'))
+
+        query = query.order_by(order_by)
     params = request.args.to_dict()
     rowTable = DataTables(params, query, columns)
 

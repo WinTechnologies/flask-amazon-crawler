@@ -12,7 +12,7 @@ class Asin(db.Model):
     unit = db.Column(db.String(64))
     sell_price = db.Column(db.String(64))
     link = db.Column(db.String(64))
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
     status = db.Column(db.String(64))
     description = db.Column(db.String(200))
 
