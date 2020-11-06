@@ -150,6 +150,8 @@
                 clearInterval(updateProgress);
                 $(".btn").prop('disabled', false);
                 percent = 100;
+
+                $("#message").html("The crawling has been finished successfully.");
             }
 
             console.log('current_length: ' + current_length);

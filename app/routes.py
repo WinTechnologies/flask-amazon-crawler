@@ -7,7 +7,7 @@ from querystring_parser import parser
 from flask import Flask, render_template, request, Blueprint, jsonify, redirect, send_file, session
 from sqlalchemy import desc, asc
 from datetime import datetime, timedelta
-
+from celery.utils.log import get_logger
 import pandas as pd
 from app import db
 from app.models.asin import Asin
@@ -45,7 +45,28 @@ def uploader():
         crawler_count = 0
         for line in lines:
             cc=line.split()
-            save_data.delay(cc[0], cc[1])
+            try:
+                save_data.apply_async((cc[0], cc[1]), retry=False)
+            except save_data.OperationalError as exec:
+                logger.exception('Sending task raised: %r', exc)
+                new_asin = Asin(
+                    site_url=cc[0],
+                    asin=cc[1],
+                    review_rating='',
+                    quantity='',
+                    unit='',
+                    sell_price='',
+                    link='httpss://' + cc[0] + '/dp/' + cc[1],
+                    status='OperationalError',
+                    description='Connection Error'
+                )
+                db.session.add(new_asin)
+                try:
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+                finally:
+                    db.session.close()
 
             crawler_count = crawler_count + 1
 
@@ -163,3 +184,47 @@ def get_data():
 
     # returns what is needed by DataTable
     return jsonify(rowTable.output_result())
+
+@bp.route("/test")
+def test():
+    domain = 'amazon.com'
+    asin_symbol = 'B081GTRKVY'
+
+    new_asin = Asin(
+            site_url=domain,
+            asin=asin_symbol,
+            review_rating='-',
+            quantity='-',
+            unit='-',
+            sell_price='-',
+            link='https://' + domain + '/dp/' + asin_symbol,
+            status='pending',
+            description=''
+        )
+
+    db.session.add(new_asin)
+    db.session.commit()
+
+    try:
+        new_pk_id = new_asin.id
+
+        result = crawler_result(domain, asin_symbol)
+
+        asin = Asin.query.filter(Asin.id == new_pk_id).first()
+        asin.review_rating = result.get('review')
+        asin.quantity = result.get('quantity')
+        asin.unit = result.get('unit')
+        asin.sell_price = result.get('sell_price')
+        asin.status = result.get('status')
+        asin.description = result.get('description')
+
+        db.session.flush()
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+
+
+    return 'tttttttttttttttt'
+
