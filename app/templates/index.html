@@ -141,6 +141,7 @@
         });
         let percent = 0;
         let updateProgress;
+
         var progress = function(expected_count, crawler_count) {
             let current_length = asin_list['context'][0]['_iRecordsTotal'];
             percent = (100 - ((expected_count - current_length) / crawler_count * 100)).toFixed(2);
