@@ -2,6 +2,7 @@ import os
 
 class Config:
     SQLALCHEMY_DATABASE_URI = "mysql://asin:qx9zH63dInw6Ma2S@localhost/asin"
+    SQLALCHEMY_POOL_SIZE=10
     SQLALCHEMY_ECHO  = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CELERY_BROKER_URL = "redis://localhost:6379/0"

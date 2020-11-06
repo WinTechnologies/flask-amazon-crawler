@@ -20,5 +20,11 @@ def save_data(domain, asin_symbol):
             description=result.get('description')
         )
     db.session.add(new_asin)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+
     return
