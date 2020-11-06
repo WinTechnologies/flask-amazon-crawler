@@ -145,6 +145,13 @@
         var progress = function(expected_count, crawler_count) {
             let current_length = asin_list['context'][0]['_iRecordsTotal'];
             percent = (100 - ((expected_count - current_length) / crawler_count * 100)).toFixed(2);
+
+            if(parseInt(percent) == 100 || current_length > expected_count) {
+                clearInterval(updateProgress);
+                $(".btn").prop('disabled', false);
+                percent = 100;
+            }
+
             console.log('current_length: ' + current_length);
             console.log('expected count: ' + expected_count);
             console.log('crawler count: ' + crawler_count);
@@ -153,11 +160,6 @@
             var html="<div class='progress-bar progress-bar-striped active' role='progressbar'  aria-valuemin='0' aria-valuemax='100' style='width:"+percent+"%'>" + percent + "%</div>";
             $(".progress").html(html);
             asin_list.draw(false);
-
-            if(parseInt(percent) == 100) {
-                clearInterval(updateProgress);
-                $(".btn").prop('disabled', false);
-            }
         };
 
         $("#upload").click(function() {
@@ -172,13 +174,15 @@
                 $("#message").html('Please select the input');
                 $("#message").removeClass('invisible');
                 $("#message").addClass('alert-danger');
-
-                console.log(file);
                 return;
             }
 
             form_data.append('input',  file);
             $('.btn').prop('disabled', true);
+
+            asin_list.draw(false);
+            init_row_count = asin_list['context'][0]['_iRecordsTotal'];
+
             $.ajax({
                 type: 'POST',
                 url:  '/uploader',
