@@ -1,12 +1,1 @@
-amazon.es          B07NRVSMKK
-amazon.es          B01054ILRO
-amazon.es          B017VTINHO
-amazon.es          B06XFD1CB4
-amazon.es          B01054IG5G
-amazon.es          B087WRGHBM
-amazon.es          B087WS3PL1
-amazon.es          B08595P6PR
-amazon.es          B07KCT8C87
-amazon.es          B06XFSCZGX
-amazon.nl          B07MNR59X7
-amazon.nl          B07G2P7CPQ
+amazon.co.jp	 B07F83QRC5
