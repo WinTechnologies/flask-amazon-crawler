@@ -20,13 +20,10 @@ def save_data(domain, asin_symbol):
 
     db.session.add(new_asin)
     db.session.commit()
-
+    new_pk_id = new_asin.id
+    asin = Asin.query.filter(Asin.id == new_pk_id).first()
     try:
-        new_pk_id = new_asin.id
-
         result = crawler_result(domain, asin_symbol)
-
-        asin = Asin.query.filter(Asin.id == new_pk_id).first()
         asin.review_rating = result.get('review')
         asin.quantity = result.get('quantity')
         asin.unit = result.get('unit')
@@ -38,6 +35,15 @@ def save_data(domain, asin_symbol):
         db.session.commit()
     except:
         db.session.rollback()
+
+        asin.review_rating = 'Failed'
+        asin.quantity = 'N/A'
+        asin.unit = 'N/A'
+        asin.sell_price = 'N/A'
+        asin.status = 'N/A'
+        asin.description = 'Currently unavailable.'
+        db.session.flush()
+        db.session.commit()
     finally:
         db.session.close()
 
