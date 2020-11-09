@@ -168,7 +168,7 @@ def crawler_result(site_url, asin):
             }
     except:
         res = {
-                'status':  'Error code',
+                'status':  'Failed',
                 'site_url': site_url,
                 'asin': asin,
                 'review': '',
