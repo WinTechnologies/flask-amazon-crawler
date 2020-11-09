@@ -40,7 +40,7 @@
 <hr />
 <div class="row">
     <div class="col-md-2">
-        <a href='/' class="btn btn-primary">Refresh</a>
+        <a href='/' class="btn btn-primary" id="refresh-btn">Refresh</a>
     </div>
     <div class="col-md-1">
         From:
@@ -139,20 +139,35 @@
 
             return false;
         });
+
         let percent = 0;
+        let redrawCount = 0;
+
         let updateProgress;
+        let redrawInterval;
+
+        let redraw_table = function() {
+            redrawCount++;
+            asin_list.draw(false);
+
+            if(redrawCount == 5)
+                clearInterval(redrawInterval);
+        };
+
+
 
         var progress = function(expected_count, crawler_count) {
             let current_length = asin_list['context'][0]['_iRecordsTotal'];
             percent = (100 - ((expected_count - current_length) / crawler_count * 100)).toFixed(2);
 
             if(parseInt(percent) == 100 || current_length > expected_count) {
+                redrawCount = 0;
                 clearInterval(updateProgress);
                 $(".btn").prop('disabled', false);
                 percent = 100;
 
                 $("#message").html("The crawling has been finished successfully.");
-                asin_list.draw(false);
+                redrawInterval = setInterval(redraw_table, 10 *1000);
             }
 
             console.log('current_length: ' + current_length);

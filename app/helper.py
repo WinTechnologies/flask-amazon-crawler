@@ -17,6 +17,7 @@ def crawler_result(site_url, asin):
         req = requests.get(url,headers=headersf)
         if req.status_code == 200:
             s=BeautifulSoup(req.content,features="lxml")
+
             quantr=""
             try:
                 quantity_reviews=s.select("#acrCustomerReviewText.a-size-base")[0].get_text().strip()
@@ -62,7 +63,7 @@ def crawler_result(site_url, asin):
 
             try:
                 price=s.select("#priceblock_ourprice")[0].get_text().strip()
-                print('price: ', price, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+
                 if("-" in str(price)):
                     a=str(price).split("-")
                     f=a[0]
