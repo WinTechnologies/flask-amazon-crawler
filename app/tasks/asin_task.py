@@ -36,11 +36,11 @@ def save_data(domain, asin_symbol):
     except:
         db.session.rollback()
 
-        asin.review_rating = 'Failed'
+        asin.review_rating = 'N/A'
         asin.quantity = 'N/A'
         asin.unit = 'N/A'
         asin.sell_price = 'N/A'
-        asin.status = 'N/A'
+        asin.status = 'Failed'
         asin.description = 'Currently unavailable.'
         db.session.flush()
         db.session.commit()
