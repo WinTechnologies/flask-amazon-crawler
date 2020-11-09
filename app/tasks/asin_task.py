@@ -30,7 +30,7 @@ def save_data(domain, asin_symbol):
         asin.review_rating = result.get('review')
         asin.quantity = result.get('quantity')
         asin.unit = result.get('unit')
-        asin.sell_price = result.get('sell_price')
+        asin.sell_price = result.get('price')
         asin.status = result.get('status')
         asin.description = result.get('description')
 
