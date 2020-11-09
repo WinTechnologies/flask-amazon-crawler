@@ -17,7 +17,6 @@ def crawler_result(site_url, asin):
         req = requests.get(url,headers=headersf)
         if req.status_code == 200:
             s=BeautifulSoup(req.content,features="lxml")
-            print('price: ', price, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             quantr=""
             try:
                 quantity_reviews=s.select("#acrCustomerReviewText.a-size-base")[0].get_text().strip()
@@ -63,7 +62,7 @@ def crawler_result(site_url, asin):
 
             try:
                 price=s.select("#priceblock_ourprice")[0].get_text().strip()
-                #print('price: ' , price, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+                print('price: ', price, '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
                 if("-" in str(price)):
                     a=str(price).split("-")
                     f=a[0]
@@ -71,11 +70,12 @@ def crawler_result(site_url, asin):
                     price=f[1:]+"-"+g[2:]
                     memontary_unit=f[0:1]
                     memontary_unit=f[0:1]
+                #elif ("," in str(price)):
+                    #price=price[1:]
+                    #memontary_unit=g[0:1]
                 elif("€" in str(price)):
                     b = str(price).split("€")
-
                     c = [x.strip() for x in b if x.strip()]
-
                     price=c[0]
                     memontary_unit="€"
                 else:
