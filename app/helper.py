@@ -176,7 +176,7 @@ def crawler_result(site_url, asin):
                 'quantity': '',
                 'price': '',
                 'link': url,
-                'description': 'Blocked'
+                'description': 'Currently unavailable.'
             }
     return res
 
