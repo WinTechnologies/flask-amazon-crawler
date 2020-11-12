@@ -108,7 +108,7 @@ def to_excel(from_date, to_date):
 
     query = db.session.query(Asin).filter(
         Asin.created_at >= from_date,
-        Asin.created_at < to_date)
+        Asin.created_at <= to_date)
     results = query.all()
 
     df = pd.DataFrame(columns=['Amazon Site','ASIN','Review Rating','Quantity of Reviews','Monteray Unit','Selling Price','Link', 'Created At'])
