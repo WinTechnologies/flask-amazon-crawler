@@ -63,6 +63,7 @@ def crawler_result(site_url, asin):
 
             try:
                 price=s.select("#priceblock_ourprice")[0].get_text().strip()
+                #print(price, '>>>>>>>>>>>>>>>>>>>>>>')
 
                 if("-" in str(price)):
                     a=str(price).split("-")
@@ -97,10 +98,11 @@ def crawler_result(site_url, asin):
                         price=f[1:]+"-"+g[2:]
                         memontary_unit=f[0:1]
                         memontary_unit=g[0:1]
-                    elif (" " in str(price)):
-                        a=str(price).split()
-                        price=a[0]
-                        memontary_unit=a[1]
+                    elif("€" in str(price)):
+                        b = str(price).split("€")
+                        c = [x.strip() for x in b if x.strip()]
+                        price=c[0]
+                        memontary_unit="€"
                     else:
                         g=str(price)
                         price=price[1:]
@@ -119,10 +121,11 @@ def crawler_result(site_url, asin):
                         price=f[1:]+"-"+g[2:]
                         memontary_unit=f[0:1]
                         memontary_unit=g[0:1]
-                    elif (" " in str(price)):
-                        a=str(price).split()
-                        price=a[0]
-                        memontary_unit=a[1]
+                    elif("€" in str(price)):
+                        b = str(price).split("€")
+                        c = [x.strip() for x in b if x.strip()]
+                        price=c[0]
+                        memontary_unit="€"
                     else:
                         g=str(price)
                         price=price[1:]
