@@ -207,10 +207,12 @@ def max_value(price):
     elif price.find('~') > -1:
         price_ranges = str(price.split("~"))
         price = price_ranges[1]
-    else:
-        price = str(price)
+
     price = price.replace(',','')
-    return float(price)
+    if price is None:
+        return 'N/A'
+    else
+        return float(price)
 
 def create_graph_data(result):
     price_data = []
