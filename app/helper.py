@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import requests
 import datetime
 from werkzeug.exceptions import HTTPException
+from flask import jsonify
+from app import db
 
 def crawler_result(site_url, asin):
     url = 'https://'+site_url+'/dp/'+asin
@@ -196,3 +198,229 @@ def to_dict(row):
 
 def dt_to_str(date, fma='%Y-%m-%d'):
     return datetime.strftime(fma)
+
+def max_value(price):
+    if price.find('-') > -1:
+        price_ranges = str(price).split("-")
+        price = price_ranges[1]
+    elif price.find('~') > -1:
+        price_ranges = str(price.split("~"))
+        price = price_ranges[1]
+    else:
+        price = str(price)
+    price = price.replace(',','')
+    return price
+
+def create_graph_data(result):
+    price_data = []
+    review_data = []
+    quantity_data = []
+    labels = []
+
+    for row in result:
+        price = max_value(row['sell_price'])
+        review = max_value(row['review_rating'])
+        quantity = max_value(row['quantity'])
+        date = row['created_at']
+
+        if price == 'N/A' and review == 'N/A'and quantity == 'N/A':
+            continue;
+
+        if price == 'N/A':
+            price = None
+        else:
+            price = float(price)
+
+        if review == 'N/A':
+            review = None
+        else:
+            review = float(review)
+
+        if quantity == 'N/A':
+            quantity = None
+        else:
+            quantity = float(quantity)
+
+        price_data.append(price)
+        review_data.append(review)
+        quantity_data.append(quantity)
+        labels.append(date)
+
+    return {
+        'price_data': price_data,
+        'review_data': review_data,
+        'quantity_data': quantity_data,
+        'labels': labels
+    }
+
+def get_by_time(_json):
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    site = _json['site']
+
+    result = db.session.execute('SELECT asin, sell_price, review_rating, quantity, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at FROM asins WHERE created_at >= :start_date AND created_at <= :end_date AND asin = :asin AND site_url = :site', {
+            'start_date': start_date,
+            'end_date': end_date,
+            'asin': asin,
+            'site': site
+        })
+
+    return create_graph_data(result)
+
+def get_by_date(_json):
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    site = _json['site']
+
+    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, DATE_FORMAT(created_at, "%Y-%m-%d") as created_at '\
+            'FROM asins '\
+            'WHERE id IN '\
+            '( '\
+                'SELECT MAX(id) '\
+                'FROM asins '\
+                'WHERE asin=:asin '\
+                'AND site_url=:site '\
+                'AND created_at >= :start_date AND created_at <= :end_date '\
+                'GROUP BY DATE_FORMAT(created_at, "%Y-%m-%d") '\
+            ') '\
+
+    result = db.session.execute(sql, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'asin': asin,
+            'site': site
+        })
+
+    return create_graph_data(result)
+
+def get_by_week(_json):
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    site = _json['site']
+
+    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, CONCAT(DATE_FORMAT(created_at,"%m"),"月",FLOOR((DAYOFMONTH(created_at)-1)/7)+1, "周") as created_at '\
+            'FROM asins '\
+            'WHERE id IN '\
+            '( '\
+                'SELECT MAX(id) '\
+                'FROM asins '\
+                'WHERE asin=:asin '\
+                'AND site_url=:site '\
+                'AND created_at >= :start_date AND created_at <= :end_date '\
+                'GROUP BY WEEK(created_at) '\
+            ') '\
+
+    result = db.session.execute(sql, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'asin': asin,
+            'site': site
+        })
+
+    return create_graph_data(result)
+    return result
+
+def get_ready_excel(_json):
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    site = _json['site']
+
+    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at '\
+            'FROM asins '\
+            'WHERE id IN '\
+            '( '\
+                'SELECT MAX(id) '\
+                'FROM asins '\
+                'WHERE ASIN=:asin '\
+                'AND site_url=:site '\
+                'AND created_at >= :start_date AND created_at <= :end_date '\
+                'GROUP BY DATE_FORMAT(created_at, "%Y-%m-%d") '\
+            ') '\
+
+    result = db.session.execute(sql, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'asin': asin,
+            'site': site
+        })
+    current_price = 0
+    current_review = 0
+
+    excel_data = []
+    for row in result:
+        price = max_value(row['sell_price'])
+        review = max_value(row['review_rating'])
+        quantity = max_value(row['quantity'])
+        date = row['created_at']
+
+        if price == 'N/A' and review == 'N/A'and quantity == 'N/A':
+            continue;
+
+        if price == 'N/A':
+            price = current_price
+        else:
+            price = float(price)
+
+        if review == 'N/A':
+            review = current_review
+        else:
+            review = float(review)
+
+        if current_price == 0:
+            diff_price = ''
+        else:
+            diff_price = float(price - current_price)
+            if diff_price > 0:
+                diff_price = '+' + str(diff_price)
+
+        if current_review == 0:
+            diff_review = ''
+        else:
+            diff_review = float(review - current_review)
+            if diff_review > 0:
+                diff_review = '+' + str("{:.2f}".format(diff_review))
+
+        item = {
+            'asin': asin,
+            'price': row['sell_price'],
+            'diff_price': diff_price,
+            'review': row['review_rating'],
+            'diff_review': diff_review,
+            'quantity': row['quantity'],
+            'date': date
+        }
+        excel_data.append(item)
+        current_price = price
+        current_review = review
+
+    return excel_data
+
+def get_by_month(_json):
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    site = _json['site']
+    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, DATE_FORMAT(created_at, "%Y-%m") as created_at '\
+            'FROM asins '\
+            'WHERE id IN '\
+            '( '\
+                'SELECT MAX(id) '\
+                'FROM asins '\
+                'WHERE ASIN=:asin '\
+                'AND site_url=:site '\
+                'AND created_at >= :start_date AND created_at <= :end_date '\
+                'GROUP BY DATE_FORMAT(created_at, "%Y-%m") '\
+            ') '\
+
+    result = db.session.execute(sql, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'asin': asin,
+            'site': site
+        })
+
+    return create_graph_data(result)

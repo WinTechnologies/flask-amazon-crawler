@@ -3,17 +3,22 @@ import requests
 import re
 import sys
 import datetime
+import xlsxwriter
+import pandas as pd
+from io import BytesIO
+
 from querystring_parser import parser
 from flask import Flask, render_template, request, Blueprint, jsonify, redirect, send_file, session
 from sqlalchemy import desc, asc
 from datetime import datetime, timedelta
 from celery.utils.log import get_logger
-import pandas as pd
+
 from app import db
 from app.models.asin import Asin
 from datatables import ColumnDT, DataTables
 from app.tasks.asin_task import save_data
 from app.forms.search import SearchForm
+from app.helper import max_value, get_by_time, get_by_date, get_by_month, get_ready_excel, get_by_week
 
 bp = Blueprint("all", __name__)
 app_root = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +27,10 @@ app_root = os.path.dirname(os.path.abspath(__file__))
 def index():
     search_form = SearchForm()
     return render_template('index.html', form=search_form)
+
+@bp.route('/analysis')
+def analysis():
+    return render_template('analysis.html')
 
 @bp.route('/uploader', methods=['GET', 'POST'])
 def uploader():
@@ -101,24 +110,105 @@ def search():
         result = query.all()
         return render_template('search_result.html', result=result)
 
-@bp.route('/to_excel/<string:from_date>/<string:to_date>', methods=['GET'])
-def to_excel(from_date, to_date):
-    from_date = datetime.strptime(from_date, '%Y-%m-%d')
-    to_date = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1)
+@bp.route('/graph', methods=['GET', 'POST'])
+def graph():
+    _json = request.json
+    start_date = _json['start']
+    end_date = _json['end']
+    asin = _json['asin']
+    x_axis = _json['x_axis']
 
-    query = db.session.query(Asin).filter(
-        Asin.created_at >= from_date,
-        Asin.created_at <= to_date)
-    results = query.all()
+    if x_axis == 'time':
+        result = get_by_time(_json)
+    elif x_axis == 'date':
+        result = get_by_date(_json)
+    elif x_axis == 'week':
+        result = get_by_week(_json)
+    elif x_axis == 'month':
+        result = get_by_month(_json)
 
-    df = pd.DataFrame(columns=['Amazon Site','ASIN','Review Rating','Quantity of Reviews','Monteray Unit','Selling Price','Link', 'Created At'])
-    filename = "/autos.xlsx"
+    response = jsonify(result)
+    response.status_code = 200
+    return response
+
+@bp.route('/get_asin', methods=['GET'])
+def get_asin():
+    search = request.args.get('q')
+    query = db.session.query(Asin.asin.distinct()).filter(Asin.asin.like('%' + str(search) + '%'))
+    results = [asin[0] for asin in query.limit(10).all()]
+    return jsonify(results=results)
+
+@bp.route('/download/<string:from_date>/<string:to_date>/<string:asin>/<string:site>', methods=['GET'])
+def download(from_date, to_date, asin, site):
+    try:
+        start = datetime.strptime(from_date, '%Y-%m-%d')
+        end = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError:
+        start = datetime.strptime(from_date, '%Y-%m-%d %H:%M:%S')
+        end = datetime.strptime(to_date, '%Y-%m-%d %H:%M:%S') + timedelta(days=1)
+
+    _json = {
+        'start': start,
+        'end': end,
+        'asin': asin,
+        'site': site
+    }
+
+    results = get_ready_excel(_json)
+    df = pd.DataFrame(columns=['ASIN', 'Price', '+/-(Price)', 'Rating', '+/-(Rating)', 'Review Quality', '抓取时间'])
+    index=0
     for row in results:
-        df = df.append({'Amazon Site': row.site_url, 'ASIN': row.asin, 'Review Rating': row.review_rating,'Monteray Unit': row.unit,'Selling Price':row.sell_price,'Link': row.link,'Quantity of Reviews':str(row.quantity), 'Created At': row.created_at},ignore_index=True)
+        index+=1
+        df = df.append({
+                'ASIN': row.get('asin'),
+                'Price':row.get('price'),
+                '+/-(Price)': row.get('diff_price'),
+                'Rating': row.get('review'),
+                '+/-(Rating)': row.get('diff_review'),
+                'Review Quality': row.get('quantity'),
+                '抓取时间': row.get('date')
+                },ignore_index=True)
 
-    df.to_excel(filename,encoding='utf-8-sig',index=False)
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
-    return send_file(filename)
+    df.to_excel(writer, sheet_name='ASIN', float_format="%.2f", index=False)
+    workbook = writer.book
+    worksheet = writer.sheets['ASIN']
+
+    green_format = workbook.add_format({'font_color': '#29d96a'})
+    red_format = workbook.add_format({'font_color': '#c92c1e'})
+
+    worksheet.conditional_format('C2:D367', {
+        'type': 'cell',
+        'criteria': '>',
+        'value': '0',
+        'format': green_format
+    })
+    worksheet.conditional_format('C2:D367', {
+        'type': 'cell',
+        'criteria': '<',
+        'value': '0',
+        'format': red_format
+    })
+
+    worksheet.conditional_format('E2:F367', {
+        'type': 'cell',
+        'criteria': '>',
+        'value': '0',
+        'format': green_format
+    })
+    worksheet.conditional_format('E2:F367', {
+        'type': 'cell',
+        'criteria': '<',
+        'value': '0',
+        'format': red_format
+    })
+
+
+    writer.save()
+    output.seek(0)
+    return send_file(output, attachment_filename='output.xlsx', as_attachment=True)
 
 @bp.route('/get_data')
 def get_data():

@@ -5,9 +5,6 @@
 {% endblock %}
 
 {% block content %}
-<br />
-<h1>Automated Asin Crawler based on Flask + Celery + MySQL</h1>
-<hr />
 <div class="alert invisible" role="alert" id='message'>
 </div>
 
@@ -39,23 +36,9 @@
 </div>
 <hr />
 <div class="row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <a href='/' class="btn btn-primary" id="refresh-btn">Refresh</a>
-    </div>
-    <div class="col-md-1">
-        From:
-    </div>
-    <div class="col-md-2">
-        <input class="datepicker_from" data-date-format="mm/dd/yyyy">
-    </div>
-    <div class="col-md-1">
-        To:
-    </div>
-    <div class="col-md-2">
-        <input class="datepicker_to" data-date-format="mm/dd/yyyy">
-    </div>
-    <div class="col-md-1">
-        <button id='excel' class="btn btn-primary">Download</button>
+        <a href='/analysis' class="btn btn-success">Analysis Asin</a>
     </div>
 </div>
 <hr />

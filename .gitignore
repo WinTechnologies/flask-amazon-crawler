@@ -1,3 +1,4 @@
-/env/
-/uploads/
+.vscode
+node_modules
+uploads
 /app/uploads

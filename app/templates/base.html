@@ -10,11 +10,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-datepicker.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     {% block extra_stylesheets %} {% endblock %}
 </head>
 
 <body>
     <div class="container">
+        <br />
+        <h1>Automated Asin Crawler based on Flask + Celery + MySQL</h1>
+        <hr />
         {% block content %}{% endblock %}
     </div>
 </body>

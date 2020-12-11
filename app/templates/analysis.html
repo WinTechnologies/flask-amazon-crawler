@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block extra_stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/daterangepicker.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/switch.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="alert invisible" role="alert" id='message'>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div id="reportrange" class="form-control" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                <i class="fas fa-calendar-week"></i>&nbsp;
+                <span></span> <i class="fas fa-caret-down"></i>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <input type='text' name='asin' placeholder='Please input ASIN here' class="form-control" id='asin' value="B07RY8XGR2" autocomplete="off" />
+        </div>
+        <div class="col-md-1">
+            <select class="form-control site-select">
+                <option selected value="amazon.com">US</option>
+                <option value="amazon.co.jp">JP</option>
+                <option value="amazon.com.au">AU</option>
+                <option value="amazon.co.uk">UK</option>
+                <option value="amazon.de">DE</option>
+                <option value="amazon.fr">FR</option>
+                <option value="amazon.es">ES</option>
+                <option value="amazon.it">IT</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-success" id="analysis_btn">Analysis</button>
+            <button class="btn btn-warning" id="download_btn">Excel Download</button>
+            <a href='/' class="btn btn-primary" id="refresh-btn" >Go Back</a>
+        </div>
+    </div>
+    <div class="row mt-30">
+        <div class="col-md-12 text-center">
+            <div class="btn-group" role="group" aria-label="Period Type">
+                <button type="button" class="btn btn-success x_axis" data-type="time">Every Time</button>
+                <button type="button" class="btn btn-primary x_axis" data-type="date">Every Date</button>
+                <button type="button" class="btn btn-primary x_axis" data-type="week">Every Week</button>
+                <button type="button" class="btn btn-primary x_axis" data-type="month">Every Month</button>
+                <input type='hidden' id="x_axis" value="time" />
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="row mt-30">
+        <div clss="col-md-12">
+            <canvas id = "priceChart" width="1110" height="625" class="graph-canvas"></canvas>
+        </div>
+    </div>
+    <div class="row mt-30">
+        <div clss="col-md-12">
+            <canvas id = "reviewChart" width="1110" height="625" class="graph-canvas"></canvas>
+        </div>
+    </div>
+    <div class="row mt-30">
+        <div clss="col-md-12">
+            <canvas id = "quantityChart" width="1110" height="625" class="graph-canvas"></canvas>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_javascripts %}
+<script src="{{ url_for('static', filename='js/daterangepicker.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-autocomplete.min.js') }}"></script>
+
+<script type="text/javascript" charset="utf-8">
+    // ASIN Auto-complete
+    $("#asin").autoComplete({
+        minLength: 2,
+        resolver: 'custom',
+        formatResult: function(item) {
+            return {
+                value: item,
+                text: item,
+                html: item
+            };
+        },
+        events: {
+            search: function(q, callback) {
+                $.ajax(
+                    '/get_asin',
+                    {
+                        data: { q: q},
+                    }
+                ).done(function (res) {
+                    callback(res.results)
+                })
+            }
+        }
+    });
+    // DataRange Picker
+    var start = moment().subtract(29, 'days');
+    var end = moment();
+
+    var startDate = start.format('YYYY-MM-DD');
+    var endDate =  end.format('YYYY-MM-DD');
+    function cb(start, end) {
+        $('#reportrange span').html(startDate + ' - ' + endDate);
+    }
+
+    $('#reportrange').daterangepicker({
+        timePicker: true,
+        startDate: start,
+        endDate: end,
+        ranges: {
+           'Today': [moment(), moment()],
+           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        }
+    }, cb);
+
+    $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
+        startDate = picker.startDate.format('YYYY-MM-DD HH:mm:ss');
+        endDate = picker.endDate.format('YYYY-MM-DD HH:mm:ss');
+        $('#reportrange span').html(startDate + ' - ' + endDate);
+    });
+    cb(start, end);
+
+    // Analysis Button Action
+    $("#analysis_btn").click(function(e){
+        e.preventDefault();
+        let asin = $("#asin").val();
+        let site = $('.site-select').val();
+
+        const x_axis = $("#x_axis").val();
+        if (asin === undefined || asin.length == 0) {
+            $("#message").html("Please input the formatted ASIN correctly.");
+            $("#message").removeClass('invisible');
+            $("#message").addClass('alert-danger');
+            return;
+        }
+
+        const scales = {
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true
+                        }
+                    }],
+                    yAxes: [{
+                        stacked: true,
+                        ticks: {
+                            min: 0,
+                            max: 100,
+                            beginAtZero: true,
+                        }
+                    }]
+                }
+            }
+        // Price Chart
+        $.ajax({
+            type: 'POST',
+            url: '/graph',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({
+                    'start': startDate,
+                    'end': endDate,
+                    'asin': asin,
+                    'x_axis': x_axis,
+                    'site': site
+                }),
+            dataType: 'json',
+            success: function(data) {
+                console.log(data);
+                // Price Chart
+                var price = $('#priceChart');
+                let priceLineChart = new Chart(price, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Price',
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgb(255, 99, 132)',
+                            data: data.price_data,
+                            fill: false,
+                            spanGaps: true
+                        }]
+                    },
+                    options: {
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: 'Site: ' + site
+                                }
+                            },
+                    scales
+                });
+
+                // Review
+                var review = $('#reviewChart');
+                let reviewLineChart = new Chart(review, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Review',
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgb(54, 162, 235)',
+                            data: data.review_data,
+                            fill: false,
+                            spanGaps: true
+                        }]
+                    },
+                    options: {
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: 'Site: ' + site
+                                }
+                            }
+                });
+                // Quantity
+                var quantity = $('#quantityChart');
+                let quantityLineChart = new Chart(quantity, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Quantity',
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgb(75, 192, 192)',
+                            data: data.quantity_data,
+                            fill: false,
+                            spanGaps: true
+                        }]
+                    },
+                    options: {
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: 'Site: ' + site
+                                }
+                            }
+                });
+            }
+        })
+    });
+
+
+    // Period TYpe
+    $(".x_axis").click(function(e){
+        e.preventDefault();
+        const type = $(this).data('type');
+        $('.x_axis').removeClass('btn-primary')
+        $('.x_axis').removeClass('btn-success')
+        $('.x_axis').addClass('btn-primary')
+        $(this).addClass('btn-success')
+
+        $("#x_axis").val(type);
+        $("#analysis_btn").trigger('click')
+    });
+
+    // Excel Download
+    $("#download_btn").click(function(e){
+        const asin = $('#asin').val();
+        if ( asin == '') {
+            $("#message").html("Please input the ASIN correctly.")
+            $("#message").removeClass('invisible');
+            $("#message").addClass('alert-danger');
+            return;
+        }
+        let site = $('.site-select').val();
+        console.log("/download/" + startDate + "/" + endDate + '/' + asin + '/' + site)
+
+        // Excel Download
+        window.open( "/download/" + startDate + "/" + endDate + '/' + asin + '/' + site, "_blank")
+        return false;
+    });
+</script>
+{% endblock %}
