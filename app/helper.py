@@ -211,7 +211,7 @@ def max_value(price):
     price = price.replace(',','')
     if price is None:
         return 'N/A'
-    else
+    else:
         return float(price)
 
 def create_graph_data(result):
