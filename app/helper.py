@@ -210,7 +210,7 @@ def max_value(price):
     else:
         price = str(price)
     price = price.replace(',','')
-    return price
+    return float(price)
 
 def create_graph_data(result):
     price_data = []
