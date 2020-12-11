@@ -120,8 +120,8 @@
     }, cb);
 
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
-        startDate = picker.startDate.format('YYYY-MM-DD HH:mm:ss');
-        endDate = picker.endDate.format('YYYY-MM-DD HH:mm:ss');
+        startDate = picker.startDate.format('YYYY-MM-DD');
+        endDate = picker.endDate.format('YYYY-MM-DD');
         $('#reportrange span').html(startDate + ' - ' + endDate);
     });
     cb(start, end);
