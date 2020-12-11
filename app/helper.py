@@ -259,7 +259,7 @@ def get_by_time(_json):
     asin = _json['asin']
     site = _json['site']
 
-    result = db.session.execute('SELECT asin, sell_price, review_rating, quantity, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at FROM asins WHERE created_at >= :start_date AND created_at <= :end_date AND asin = :asin AND site_url = :site', {
+    result = db.session.execute('SELECT asin, sell_price, review_rating, quantity, DATE_FORMAT(created_at, "%Y-%m-%d %H:%i:%s") as created_at FROM asins WHERE status="success" AND created_at >= :start_date AND created_at <= :end_date AND asin = :asin AND site_url = :site', {
             'start_date': start_date,
             'end_date': end_date,
             'asin': asin,
@@ -281,6 +281,7 @@ def get_by_date(_json):
                 'SELECT MAX(id) '\
                 'FROM asins '\
                 'WHERE asin=:asin '\
+                'AND status="success" '\
                 'AND site_url=:site '\
                 'AND created_at >= :start_date AND created_at <= :end_date '\
                 'GROUP BY DATE_FORMAT(created_at, "%Y-%m-%d") '\
@@ -309,6 +310,7 @@ def get_by_week(_json):
                 'FROM asins '\
                 'WHERE asin=:asin '\
                 'AND site_url=:site '\
+                'AND status="success" '\
                 'AND created_at >= :start_date AND created_at <= :end_date '\
                 'GROUP BY WEEK(created_at) '\
             ') '\
@@ -337,6 +339,7 @@ def get_ready_excel(_json):
                 'FROM asins '\
                 'WHERE ASIN=:asin '\
                 'AND site_url=:site '\
+                'AND status="success" '\
                 'AND created_at >= :start_date AND created_at <= :end_date '\
                 'GROUP BY DATE_FORMAT(created_at, "%Y-%m-%d") '\
             ') '\
@@ -412,6 +415,7 @@ def get_by_month(_json):
                 'FROM asins '\
                 'WHERE ASIN=:asin '\
                 'AND site_url=:site '\
+                'AND status="success" '\
                 'AND created_at >= :start_date AND created_at <= :end_date '\
                 'GROUP BY DATE_FORMAT(created_at, "%Y-%m") '\
             ') '\
