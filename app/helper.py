@@ -200,6 +200,7 @@ def dt_to_str(date, fma='%Y-%m-%d'):
     return datetime.strftime(fma)
 
 def max_value(price):
+    price = str(price)
     if price.find('-') > -1:
         price_ranges = str(price).split("-")
         price = price_ranges[1]
