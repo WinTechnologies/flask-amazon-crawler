@@ -179,26 +179,26 @@ def download(from_date, to_date, asin, site):
     green_format = workbook.add_format({'font_color': '#29d96a'})
     red_format = workbook.add_format({'font_color': '#c92c1e'})
 
-    worksheet.conditional_format('C2:D367', {
+    worksheet.conditional_format('C2:C367', {
         'type': 'cell',
         'criteria': '>',
         'value': '0',
         'format': green_format
     })
-    worksheet.conditional_format('C2:D367', {
+    worksheet.conditional_format('C2:C367', {
         'type': 'cell',
         'criteria': '<',
         'value': '0',
         'format': red_format
     })
 
-    worksheet.conditional_format('E2:F367', {
+    worksheet.conditional_format('E2:E367', {
         'type': 'cell',
         'criteria': '>',
         'value': '0',
         'format': green_format
     })
-    worksheet.conditional_format('E2:F367', {
+    worksheet.conditional_format('E2:E367', {
         'type': 'cell',
         'criteria': '<',
         'value': '0',
