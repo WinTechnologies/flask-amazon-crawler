@@ -200,6 +200,9 @@ def dt_to_str(date, fma='%Y-%m-%d'):
     return datetime.strftime(fma)
 
 def max_value(price):
+    if price is None or price == 'N/A' or price == '':
+        return 'N/A'
+
     price = str(price)
     if price.find('-') > -1:
         price_ranges = str(price).split("-")
@@ -209,12 +212,12 @@ def max_value(price):
         price = price_ranges[1]
 
     price = price.replace(',','')
-    if price is None or price == 'N/A' or price == '':
-        return 'N/A'
-    else:
-        return float(price)
+    return float(price)
 
 def max_review(price):
+    if price is None or price == 'N/A' or price == '':
+        return 'N/A'
+
     price = str(price)
     if price.find('-') > -1:
         price_ranges = str(price).split("-")
@@ -224,10 +227,7 @@ def max_review(price):
         price = price_ranges[1]
 
     price = price.replace(',','.')
-    if price is None or price == 'N/A' or price == '':
-        return 'N/A'
-    else:
-        return float(price)
+    return float(price)
 
 
 def create_graph_data(result):
