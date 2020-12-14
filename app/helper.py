@@ -209,10 +209,26 @@ def max_value(price):
         price = price_ranges[1]
 
     price = price.replace(',','')
+    if price is None or price == 'N/A':
+        return 'N/A'
+    else:
+        return float(price)
+
+def review(price):
+    price = str(price)
+    if price.find('-') > -1:
+        price_ranges = str(price).split("-")
+        price = price_ranges[1]
+    elif price.find('~') > -1:
+        price_ranges = str(price.split("~"))
+        price = price_ranges[1]
+
+    price = price.replace(',','.')
     if price is None:
         return 'N/A'
     else:
         return float(price)
+
 
 def create_graph_data(result):
     price_data = []
@@ -222,7 +238,7 @@ def create_graph_data(result):
 
     for row in result:
         price = max_value(row['sell_price'])
-        review = max_value(row['review_rating'])
+        review = review(row['review_rating'])
         quantity = max_value(row['quantity'])
         date = row['created_at']
 
