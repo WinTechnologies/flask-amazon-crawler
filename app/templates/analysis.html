@@ -129,6 +129,19 @@
     // Analysis Button Action
     $("#analysis_btn").click(function(e){
         e.preventDefault();
+        // Clear Canvas
+        const priceCanvas = document.getElementById('priceChart');
+        let context = priceCanvas.getContext('2d');
+        context.clearRect(0, 0, priceCanvas.width, priceCanvas.height);
+
+        const reviewCanvas = document.getElementById('reviewChart');
+        context = reviewCanvas.getContext('2d');
+        context.clearRect(0, 0, reviewCanvas.width, reviewCanvas.height);
+
+        const quantityCanvas = document.getElementById('quantityChart');
+        context = quantityCanvas.getContext('2d');
+        context.clearRect(0, 0, quantityCanvas.width, quantityCanvas.height)
+
         let asin = $("#asin").val();
         let site = $('.site-select').val();
 
@@ -172,7 +185,6 @@
                 }),
             dataType: 'json',
             success: function(data) {
-                console.log(data);
                 // Price Chart
                 var price = $('#priceChart');
                 let priceLineChart = new Chart(price, {
