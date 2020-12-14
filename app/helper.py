@@ -214,7 +214,7 @@ def max_value(price):
     else:
         return float(price)
 
-def review(price):
+def max_review(price):
     price = str(price)
     if price.find('-') > -1:
         price_ranges = str(price).split("-")
@@ -238,7 +238,7 @@ def create_graph_data(result):
 
     for row in result:
         price = max_value(row['sell_price'])
-        review = review(row['review_rating'])
+        review = max_review(row['review_rating'])
         quantity = max_value(row['quantity'])
         date = row['created_at']
 
