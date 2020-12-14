@@ -209,7 +209,7 @@ def max_value(price):
         price = price_ranges[1]
 
     price = price.replace(',','')
-    if price is None or price == 'N/A':
+    if price is None or price == 'N/A' or price == '':
         return 'N/A'
     else:
         return float(price)
@@ -224,7 +224,7 @@ def max_review(price):
         price = price_ranges[1]
 
     price = price.replace(',','.')
-    if price is None:
+    if price is None or price == 'N/A' or price == '':
         return 'N/A'
     else:
         return float(price)
