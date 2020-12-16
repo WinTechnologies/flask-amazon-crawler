@@ -305,7 +305,7 @@ def get_by_week(_json):
     asin = _json['asin']
     site = _json['site']
 
-    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, CONCAT(DATE_FORMAT(created_at,"%m"),"月",WEEK(created_at,5) - WEEK(DATE_SUB(created_at,INTERVAL DAYOFMONTH(created_at) - 1 DAY),5) + 1, "周") AS created_at '\
+    sql = 'SELECT id, ASIN, sell_price, quantity, unit, review_rating, CONCAT(DATE_FORMAT(created_at,"%m"),"月",WEEK(created_at) - WEEK(DATE_SUB(created_at,INTERVAL DAYOFMONTH(created_at) - 1 DAY)) + 1, "周") AS created_at '\
             'FROM asins '\
             'WHERE id IN '\
             '( '\

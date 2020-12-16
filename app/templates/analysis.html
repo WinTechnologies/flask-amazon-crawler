@@ -126,34 +126,14 @@
     });
     cb(start, end);
 
-    // Analysis Button Action
-    $("#analysis_btn").click(function(e){
-        e.preventDefault();
-        // Clear Canvas
-        const priceCanvas = document.getElementById('priceChart');
-        let context = priceCanvas.getContext('2d');
-        context.clearRect(0, 0, priceCanvas.width, priceCanvas.height);
-
-        const reviewCanvas = document.getElementById('reviewChart');
-        context = reviewCanvas.getContext('2d');
-        context.clearRect(0, 0, reviewCanvas.width, reviewCanvas.height);
-
-        const quantityCanvas = document.getElementById('quantityChart');
-        context = quantityCanvas.getContext('2d');
-        context.clearRect(0, 0, quantityCanvas.width, quantityCanvas.height)
-
-        let asin = $("#asin").val();
-        let site = $('.site-select').val();
-
-        const x_axis = $("#x_axis").val();
-        if (asin === undefined || asin.length == 0) {
-            $("#message").html("Please input the formatted ASIN correctly.");
-            $("#message").removeClass('invisible');
-            $("#message").addClass('alert-danger');
-            return;
-        }
-
-        const scales = {
+    const chart_options = {
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: 'Site: '
+                            }
+                        }
+    const scales = {
                 scales: {
                     xAxes: [{
                         display: true,
@@ -171,6 +151,67 @@
                     }]
                 }
             }
+    var price = $('#priceChart');
+    let priceLineChart = new Chart(price, {
+                type: 'line',
+                data: {
+                    labels: '',
+                    datasets: []
+                },
+                options: chart_options,
+                scales
+            });
+
+    var review = $('#reviewChart');
+    let reviewLineChart = new Chart(review, {
+        type: 'line',
+        data: {
+            labels: '',
+            datasets: []
+        },
+        options: chart_options,
+        scales
+    });
+
+    var quantity = $('#quantityChart');
+    let quantityLineChart = new Chart(quantity, {
+        type: 'line',
+        data: {
+            labels: '',
+            datasets: []
+        },
+        options: chart_options,
+        scales
+    });
+
+    // Analysis Button Action
+    $("#analysis_btn").click(function(e){
+        e.preventDefault();
+
+        let asin = $("#asin").val();
+        let site = $('.site-select').val();
+
+        const x_axis = $("#x_axis").val();
+        if (asin === undefined || asin.length == 0) {
+            $("#message").html("Please input the formatted ASIN correctly.");
+            $("#message").removeClass('invisible');
+            $("#message").addClass('alert-danger');
+            return;
+        }
+
+        // Clear Canvas
+        const priceCanvas = document.getElementById('priceChart');
+        let context = priceCanvas.getContext('2d');
+        context.clearRect(0, 0, 1110, 625);
+
+        const reviewCanvas = document.getElementById('reviewChart');
+        context = reviewCanvas.getContext('2d');
+        context.clearRect(0, 0, 1110, 625);
+
+        const quantityCanvas = document.getElementById('quantityChart');
+        context = quantityCanvas.getContext('2d');
+        context.clearRect(0, 0, 1110, 625)
+
         // Price Chart
         $.ajax({
             type: 'POST',
@@ -186,12 +227,8 @@
             dataType: 'json',
             success: function(data) {
                 // Price Chart
-                var price = $('#priceChart');
-                let priceLineChart = new Chart(price, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
+                priceLineChart.data.labels = data.labels
+                priceLineChart.data.datasets = [{
                             label: 'Price',
                             borderColor: 'rgb(255, 99, 132)',
                             backgroundColor: 'rgb(255, 99, 132)',
@@ -199,63 +236,34 @@
                             fill: false,
                             spanGaps: true
                         }]
-                    },
-                    options: {
-                                responsive: true,
-                                title: {
-                                    display: true,
-                                    text: 'Site: ' + site
-                                }
-                            },
-                    scales
-                });
+                priceLineChart.options.title.text = 'Site: ' + site
+                priceLineChart.update()
 
                 // Review
-                var review = $('#reviewChart');
-                let reviewLineChart = new Chart(review, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Review',
-                            borderColor: 'rgb(54, 162, 235)',
-                            backgroundColor: 'rgb(54, 162, 235)',
-                            data: data.review_data,
-                            fill: false,
-                            spanGaps: true
-                        }]
-                    },
-                    options: {
-                                responsive: true,
-                                title: {
-                                    display: true,
-                                    text: 'Site: ' + site
-                                }
-                            }
-                });
+                reviewLineChart.data.labels = data.labels
+                reviewLineChart.data.datasets = [{
+                        label: 'Review',
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgb(54, 162, 235)',
+                        data: data.review_data,
+                        fill: false,
+                        spanGaps: true
+                    }]
+                reviewLineChart.options.title.text = 'Site: ' + site
+                reviewLineChart.update()
+
                 // Quantity
-                var quantity = $('#quantityChart');
-                let quantityLineChart = new Chart(quantity, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Quantity',
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgb(75, 192, 192)',
-                            data: data.quantity_data,
-                            fill: false,
-                            spanGaps: true
-                        }]
-                    },
-                    options: {
-                                responsive: true,
-                                title: {
-                                    display: true,
-                                    text: 'Site: ' + site
-                                }
-                            }
-                });
+                quantityLineChart.data.labels = data.labels
+                quantityLineChart.data.datasets = [{
+                    label: 'Quantity',
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgb(75, 192, 192)',
+                    data: data.quantity_data,
+                    fill: false,
+                    spanGaps: true
+                }]
+                quantityLineChart.options.title.text = 'Site: ' + site
+                quantityLineChart.update()
             }
         })
     });
